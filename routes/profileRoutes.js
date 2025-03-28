@@ -1,32 +1,35 @@
 const express = require("express");
-const multer = require("multer");
-const authMiddleware = require("../middleware/authMiddleware");
+const authMiddleware = require("../middleware/authMiddleware"); // Ensure authentication
 const User = require("../models/User");
 
 const router = express.Router();
-const upload = multer({ dest: "uploads/" }); // Store uploaded profile pictures
 
-// ✅ Get User Profile
-router.get("/me", authMiddleware, async (req, res) => {
+// ✅ Get Profile (Authenticated)
+router.get("/", authMiddleware, async (req, res) => {
   try {
-    const user = await User.findById(req.user).select("-password");
+    const user = await User.findById(req.user.userId).select("-password");
+    if (!user) return res.status(404).json({ message: "User not found" });
+
     res.json(user);
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// ✅ Update User Profile
-router.put("/me", authMiddleware, upload.single("profilePic"), async (req, res) => {
+// ✅ Update Profile
+router.put("/update", authMiddleware, async (req, res) => {
+  const { name, address, bio } = req.body;
+
   try {
-    const { name, address, bio } = req.body;
-    const profilePic = req.file ? `/uploads/${req.file.filename}` : undefined;
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.userId,
+      { name, address, bio },
+      { new: true, runValidators: true }
+    );
 
-    const updatedData = { name, address, bio };
-    if (profilePic) updatedData.profilePic = profilePic;
+    if (!updatedUser) return res.status(404).json({ message: "User not found" });
 
-    const user = await User.findByIdAndUpdate(req.user, updatedData, { new: true }).select("-password");
-    res.json(user);
+    res.json({ message: "Profile updated successfully", user: updatedUser });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }

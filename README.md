@@ -19,5 +19,5 @@ This is a RESTful API for managing user profiles with authentication using **Nod
 
 ### **1️⃣ Clone the Repository**
 ```bash
-git clone https://github.com/your-username/UserProfileAPI.git
+git clone https://github.com/Prabhwork/UserProfileAPI.git
 cd UserProfileAPI
